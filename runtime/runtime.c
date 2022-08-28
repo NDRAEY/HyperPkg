@@ -4,6 +4,10 @@
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/wait.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <ftw.h>
 
 #define AUTHOR_SPECIFIED 1
 
@@ -68,12 +72,9 @@ void carol_read_package_data(FILE* file, unsigned short flags, CarolPackageData*
   data->pkgver[pkgversize] = 0;
   
   fread(data->pkgver, 1, pkgversize, file);
-  //printf("Point: %ld\n", ftell(file));
-  //printf("1: %s\n2: %s\n3: %s\n", data->pkgname, data->pkgauthor, data->pkgver);
 }
 
 CarolEntry* carol_read_entry(FILE* file) {
-  // printf("Size: %d\n", sizeof(CarolEntry)); // EIGHT! Should be five!
   CarolEntry* tmp = calloc(1, sizeof(CarolEntry));
   fread(&tmp->type, 1, 1, file);
   if(tmp->type==RESOURCE) {
@@ -118,17 +119,14 @@ void do_unpack_archive(FILE *fp, char* fname) {
   strcpy(execfile, fname);
   strcat(execfile, "/");
   strcat(execfile, fname);
-  printf("Execfule: %s\n", execfile);
   
   while(ftell(fp)<filesize) {
     CarolEntry* entry = carol_read_entry(fp);
-    //printf("T: %d\nN: %s\nS: %d\n", entry->type, entry->name, entry->size);
     
     if(entry->type==EXECUTABLE) {
       char* fdat = malloc(entry->size);
       fread(fdat, 1, entry->size, fp);
       
-      //# warning "Continue here!"
       FILE* fwr = fopen(execfile, "w");
       if(!fwr) {
         printf("Write: Error occured! (%s) <%s>\n", execfile, strerror(errno));
@@ -141,8 +139,6 @@ void do_unpack_archive(FILE *fp, char* fname) {
       
       free(fdat);
     }else if(entry->type==DIRECTORY) {
-      //printf("Creating directory %s\n", entry->name);
-      
       char* totfn = malloc(strlen(fname)+1+strlen(entry->name)+1);
       memset(totfn, 0, strlen(fname)+1+strlen(entry->name)+1);
       strcpy(totfn, fname);
@@ -185,11 +181,17 @@ void pretty_log(const char* fmt, ...) {
   va_end(pkx);
 }
 
+int remove_f(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf) {
+  int rv = remove(fpath);
+  if (rv) perror(fpath);
+  return rv;
+}
+
 int main(int argc, char** argv) {
   srand(time(0));
   char* tmpname = generate_tmp();
   
-  printf("HyperPkg by NDRAEY (c) 2022\n");
+  printf("HyperPkg by NDRAEY (c) 2022\n\n");
   if(argc<=1) {
     printf("error: too many arguments\n");
     printf("Usage: carolhyper package\n");
@@ -214,21 +216,30 @@ int main(int argc, char** argv) {
   CarolPackageData* pkgdata = carol_init_package_data();
   carol_read_package_data(fp, pkgflags->flags, pkgdata);
 
-  printf("Name: %s\n", pkgdata->pkgname);
-  printf("Version: %s\n", pkgdata->pkgver);
-  printf("Author: %s\n", pkgdata->pkgauthor);
-  
   pretty_log("Running package %s (%s)\n", pkgdata->pkgname, pkgdata->pkgver);
   
-  // Now, pointer points to the start of archive
-  /*
-  CarolEntry* entry = carol_read_entry(fp);
-  printf("Entry type: %d\n", entry->type);
-  printf("Entry size: %d\n", entry->size);
-  free(entry);
-  */
-  
   do_unpack_archive(fp, tmpname);
+  chdir(tmpname);
+  
+  char* runnablepath = malloc(strlen(tmpname)+3);
+  memset(runnablepath, 0, strlen(tmpname)+3);
+  strcpy(runnablepath, "./");
+  strcat(runnablepath, tmpname);
+  
+  int cpid = fork();
+  
+  if(cpid==0) {
+    char *cargv[2] = {runnablepath, NULL};
+    execv(tmpname, cargv);
+  }
+  
+  waitpid(cpid, 0, 0);
+  
+  free(runnablepath);
+  
+  chdir("..");
+    
+  nftw(tmpname, remove_f, 256, FTW_DEPTH | FTW_PHYS);
   
   carol_destroy_package_data(pkgdata);
   fclose(fp);
