@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/data/data/com.termux/files/usr/bin/python
 
 import hyperpkg as pack
 import argparse
@@ -25,6 +25,7 @@ if __name__=="__main__":
     package.write_something(package.MAIN, open(args.executable, "rb"))
 
     for a, b, c in os.walk(args.resources):
+        print(a, b, c)
         for k in c:
             print("Packing resource:", a+"/"+k)
             package.write_something(package.RESOURCE, open(a+"/"+k, "rb"))
