@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
   printf("HyperPkg by NDRAEY (c) 2022\n\n");
   if(argc<=1) {
     printf("error: too many arguments\n");
-    printf("Usage: carolhyper package\n");
+    printf("Usage: hyperpkg-run package\n");
     exit(1);
   }
   char* package = argv[argc-1];
