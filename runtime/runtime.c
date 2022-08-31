@@ -202,14 +202,15 @@ int main(int argc, char** argv) {
     exit(1);
   }
   char* package = argv[argc-1];
-  
+
+  pretty_log("Reading package data...\n");
   FILE* fp = fopen(package, "rb");
   if(!fp) {
     printf("Could not open file: %s (fopen() failed)\n", package);
     exit(1);
   }
   
-  CarolInitialHeader* pkgflags = malloc(sizeof(CarolInitialHeader*));
+  CarolInitialHeader* pkgflags = calloc(1, sizeof(CarolInitialHeader*));
   fread(pkgflags, sizeof(CarolInitialHeader), 1, fp);
   
   if(memcmp(pkgflags->magic, magic, 5)!=0) {
@@ -220,9 +221,11 @@ int main(int argc, char** argv) {
   CarolPackageData* pkgdata = carol_init_package_data();
   carol_read_package_data(fp, pkgflags->flags, pkgdata);
 
-  pretty_log("Running package %s (%s)\n", pkgdata->pkgname, pkgdata->pkgver);
+  pretty_log("Reading package '%s'...\n", pkgdata->pkgname);
   
   do_unpack_archive(fp, tmpname);
+  
+  pretty_log("Running package '%s' (%s)\n", pkgdata->pkgname, pkgdata->pkgver);
   chdir(tmpname);
   
   char* runnablepath = malloc(strlen(tmpname)+3);
@@ -242,6 +245,7 @@ int main(int argc, char** argv) {
   free(runnablepath);
   
   chdir("..");
+
     
   nftw(tmpname, remove_f, 256, FTW_DEPTH | FTW_PHYS);
   
