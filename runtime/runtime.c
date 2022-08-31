@@ -201,7 +201,8 @@ int main(int argc, char** argv) {
     printf("Usage: hyperpkg-run package\n");
     exit(1);
   }
-  char* package = argv[argc-1];
+  char* package = argv[1];
+  char** progargs = argv+2;
 
   pretty_log("Reading package data...\n");
   FILE* fp = fopen(package, "rb");
@@ -234,18 +235,24 @@ int main(int argc, char** argv) {
   strcat(runnablepath, tmpname);
   
   int cpid = fork();
+
+  char** totalargs = calloc(argc, sizeof(char*));
+  totalargs[0] = runnablepath;
+  for(int i=0; i<argc-2; i++) {
+  	totalargs[1+i] = progargs[i];
+  }
   
   if(cpid==0) {
-    char *cargv[2] = {runnablepath, NULL};
-    execv(tmpname, cargv);
+    //char *cargv[2] = {runnablepath, NULL};
+    execv(tmpname, totalargs);
   }
   
   waitpid(cpid, 0, 0);
-  
+
+  free(totalargs);
   free(runnablepath);
   
   chdir("..");
-
     
   nftw(tmpname, remove_f, 256, FTW_DEPTH | FTW_PHYS);
   
