@@ -90,6 +90,11 @@ And create package:
 hyperpkg-packer -e program -n "My First Package" -r res/ -a "Your Name"
 ```
 
+- `-e` flag - path to main executable
+- `-n` flag - package name
+- `-r` flag - path to folder that contains resources
+- `-a` flag - author name
+
 Now, you will get new file named: ```My First Package.hyperpkg```
 
 And now, you can run it:
