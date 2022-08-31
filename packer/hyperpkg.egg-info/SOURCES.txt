@@ -1,8 +1,0 @@
-setup.py
-hyperpkg/__init__.py
-hyperpkg/hyperpkg-packer
-hyperpkg/hyperpkg.py
-hyperpkg.egg-info/PKG-INFO
-hyperpkg.egg-info/SOURCES.txt
-hyperpkg.egg-info/dependency_links.txt
-hyperpkg.egg-info/top_level.txt
