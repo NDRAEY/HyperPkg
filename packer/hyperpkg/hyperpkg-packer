@@ -13,12 +13,13 @@ if __name__=="__main__":
     parser.add_argument('--resources', '-r', required=True)
     parser.add_argument('--name', '-n', required=True)
     parser.add_argument('--author', '-a', const="Unknown Author", nargs='?')
+    parser.add_argument('--version', '-v', const="0.0.1", nargs='?')
     args = parser.parse_args()
 
     print("Starting...")
     fo = open(f"{args.name}.hyperpkg", "wb")
 
-    package = pack.CarolWriter(fo, args.name, args.author)
+    package = pack.CarolWriter(fo, args.name, args.author, args.version)
     package.make_hdr()
 
     print("Executable:", args.executable)
