@@ -1,5 +1,5 @@
-./packer/build/*
-./packer/hyperpkg.egg-info/*
-./packer/dist/*
+packer/build/*
+packer/hyperpkg.egg-info/*
+packer/dist/*
 
-./runtime/runtime
+runtime/runtime
